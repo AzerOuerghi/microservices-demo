@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-order
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: orderdb
+      MYSQL_USER: orderuser
+      MYSQL_PASSWORD: orderpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_order_data:/var/lib/mysql
+
+  order-service:
+    image: openjdk:17-jdk
+    container_name: order-service
+    depends_on:
+      - mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/orderdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: orderuser
+      SPRING_DATASOURCE_PASSWORD: orderpassword
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./target/Order-0.0.1-SNAPSHOT.jar:/app/app.jar
+    command: ["java", "-jar", "/app/app.jar"]
+
+volumes:
+  mysql_order_data:
