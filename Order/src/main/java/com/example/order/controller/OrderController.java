@@ -1,7 +1,10 @@
 package com.example.order.controller;
 
 import com.example.order.dto.OrderDTO;
+import com.example.order.feign.ProductClient;
+import com.example.order.feign.ProductDTO;
 import com.example.order.service.IOrderService;
+import com.example.order.service.OrderServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +16,18 @@ public class OrderController {
 
     @Autowired
     private IOrderService orderService;
+
+    @Autowired
+    private ProductClient productClient;
+
+    private final OrderServiceImpl orderServiceImpl;
+
+    @Autowired
+    public OrderController(IOrderService orderService, ProductClient productClient, OrderServiceImpl orderServiceImpl) {
+        this.orderService = orderService;
+        this.productClient = productClient;
+        this.orderServiceImpl = orderServiceImpl;
+    }
 
     @GetMapping
     public List<OrderDTO> getAll() {
@@ -35,9 +50,9 @@ public class OrderController {
         return orderService.save(orderDTO);
     }
 
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        orderService.delete(id);
+    @GetMapping("/product/{productId}")
+    public ProductDTO getProductInfo(@PathVariable String productId) {
+        return orderServiceImpl.getProductInfo(productId);
     }
 }
 
