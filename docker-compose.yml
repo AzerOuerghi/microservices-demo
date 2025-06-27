@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   mongo:
     image: mongo:6.0
@@ -15,11 +14,12 @@ services:
       context: ./Spring-CRUD-MongoDB
     container_name: spring-crud-mongodb
     ports:
-      - "8080:9090"
+      - "9090:9090"
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/productsdb
     depends_on:
       - mongo
+      - eureka-server
 
   mysql:
     image: mysql:8.0
@@ -80,6 +80,35 @@ services:
     container_name: eureka-server
     ports:
       - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/eureka"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  gateway-service:
+    build: ./gateway-service
+    container_name: gateway-service
+    depends_on:
+      - eureka-server
+      - spring-crud-mongodb
+      - order-service
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: start-dev
+    ports:
+      - "8085:8080"
+    depends_on:
+      - mysql
 
 volumes:
   mongo_data:
